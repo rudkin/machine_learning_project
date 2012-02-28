@@ -1,0 +1,53 @@
+Machine Learning Class Project
+
+Project members: Nabin,  Kristine,  Sanjay
+
+Description:
+============
+MapReduce Canopy Clustering of Enron email documents using Jaccard distance measure. Utilizes the mrjob utilities to run map reduce environment.  Assumes prior installation and use of MRJob utility.
+
+Contents:
+=========
+In this repository, you'll find the following files: 
+-- enron.py:  munges Enron email data, outputs documents (one email = one document) with their respective words 
+              into output file enron_corpus.txt. 
+-- mrChooseCanopies.py:  starts canopy clustering by finding set of canopy centers. 
+-- mrAssignCanopies.py: given a set of initial canopy centers, assign all documents to one (or more) canopies
+
+
+Directions:
+===========
+
+Step 1. Download the Enron data (already nicely parsed) files at: 
+http://archive.ics.uci.edu/ml/machine-learning-databases/bag-of-words/docword.enron.txt.gz (unzip this file)
+http://archive.ics.uci.edu/ml/machine-learning-databases/bag-of-words/vocab.enron.txt
+
+Step 2:  Munging input Enron document data. Takes as input files "docword.enron.txt" and "vocab.enron.txt" in 
+         same directory; outputs combined information into file "enron_corpus.txt"
+% python enron.py
+
+Step 3: Find a list of canopy centers.Produces output file "canopy_centers.txt", a list of documents that make 
+        up the canopy centers. Needed for input to step 4. Also produces debug file choose_progress.log
+% python mrChooseCanopies.py < enron_corpus.txt
+
+Step 4: Assign all documents in corpus to a canopy.Produces output file "canopy_clusters.txt", a list of canopies 
+        with all associated document IDs that belong in each canopy.
+% python mrAssignCanopies.py < enron_corpus.txt
+
+
+Notes:
+===========
+Output file "canopy_centers.txt" that has a list of the documents in the format [[id, [word-term-indexs]]] that 
+represent the canopy centers. You'll also get a choose_progress.log file which is just debugging info for us.
+ 
+Data munging, finding canopy centers, and assigning points to canopies are separated into three separate 
+calls because it's been easier working/debugging in separate steps
+
+Also, for testing on a local machine, only output the first 500 documents into the corpus (instead of the entire 
+39K+ documents) so that you don't blow out your computer. When ready/tested, it can be run it on AWS (with a few
+modifications to find the input/output files on S3) over the entire set of Enron email documents. If you want to 
+test it over more documents on your local machine, take a look at around line 106 of enron.py and just adjust the 
+range of output documents that go into the enron_corpus.txt output file.
+
+4. I'm currently using the T2 value of 0.94; running this over 500 documents gives us 186 canopies. If we can play around with this number, we might get our canopy values down much further. You'll see at the very bottom of enron.py (commented out) where I attempted to take a look at some random sampling of distances between documents to try and find a good T2 number.
+
