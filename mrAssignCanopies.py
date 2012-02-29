@@ -100,8 +100,12 @@ class mrAssignCanopies(MRJob):
         sd = sqrt(sumsq/N - mean*mean)
         self.logOut.write("Avg docs per cluster: "+repr(mean)+"; std dev: "+repr(sd)+"\n\n");
 
-        # now we have the final set of canopy clusters; output them to file
-        canopiesOut = json.dumps(finalCanopyClusters)
+        # now we have the final combined set of canopy clusters; output them to file as just
+        # a list of clusters without the cluster key (key was only necessary for combining)
+        clusters = []
+        for ckey in finalCanopyClusters:
+            clusters.append( finalCanopyClusters[ckey] )
+        canopiesOut = json.dumps(clusters)
         fullPath = os.path.join(PROJECT_ROOT, 'canopy_clusters.txt')
         fileOut = open(fullPath,'w')
         fileOut.write(canopiesOut)

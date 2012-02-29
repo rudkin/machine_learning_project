@@ -27,10 +27,12 @@ class mrChooseCanopies(MRJob):
 
         self.numMappers = 1             # number of mappers
         self.mapperPasses = 0           # number of passes through mapper
+        self.logOut = None
 
         logPath = os.path.join(PROJECT_ROOT, 'choose_progress.log')
-        self.logOut = open(logPath,'w')
-        self.logOut.write("Inside mrChooseCanopies init \n")
+        if not self.logOut:
+            self.logOut = open(logPath,'w')
+            self.logOut.write("Inside mrChooseCanopies init \n")
    
  
     def configure_options(self):
@@ -89,7 +91,8 @@ class mrChooseCanopies(MRJob):
         fileOut.write(canopiesOut)
         fileOut.close()
 
-        self.logOut.close()
+        if self.logOut:
+            self.logOut.close()
 
 
 if __name__ == '__main__':
