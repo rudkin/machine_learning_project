@@ -1,6 +1,6 @@
 Machine Learning Class Project
 
-Project members: Nabin,  Kristine,  Sanjay
+Project members: Nabin Acharya,  Kristine Rudkin,  Sanjay Tribrewal
 
 Description:
 ============
@@ -13,7 +13,10 @@ In this repository, you'll find the following files:
               into output file enron_corpus.txt. 
 -- mrChooseCanopies.py:  starts canopy clustering by finding set of canopy centers. 
 -- mrAssignCanopies.py: given a set of initial canopy centers, assign all documents to one (or more) canopies
-
+-- initKMeans.py: simple random sampling of enron_corpus.txt documents for kMeans clustering
+-- kMeans.py: run the kMeans clustering on the enron_corpus.txt documents
+-- mr_kMeansIterate.py: the iteraiton to assign documents to clusters, and find new cluster centers
+-- findRelatedDocs.py: selecting a random document from the Enron corpus, find other documents similar to it
 
 Directions:
 ===========
@@ -33,6 +36,11 @@ Step 3: Find a list of canopy centers.Produces output file "canopy_centers.txt",
 Step 4: Assign all documents in corpus to a canopy.Produces output file "canopy_clusters.txt", a list of canopies 
         with all associated document IDs that belong in each canopy.
 % python mrAssignCanopies.py < enron_corpus.txt
+
+Step 5: Test the clustering algorithm by randomly selecting a Enron corpus document, and then searching the 
+        canopy clusters for similar documents. Returns top 2 lowest distance results to the target document
+% findRelatedDocs.py
+
 
 
 Notes:
