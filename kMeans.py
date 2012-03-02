@@ -3,9 +3,9 @@ from __future__ import with_statement
 '''
 Created on Mar 1, 2012
 
-@author: Nabin
-         Kristine
-         Sanjay
+@author: Nabin Acharya
+         Kristine Rudkin
+         Sanjay Tibrewal
 '''
 
 from mr_kMeansIterate import MRkMeansIter
@@ -15,15 +15,8 @@ import os
 import nltk
 
 '''
-This is a calling program to run several mr jobs
-1. first it calls an mrjob to run through the data set and pick k random points as starting points for iteration
-2. control iterative process by stepping through iterative improvements in centroid calculations until convergence
-Improvements -
-a. more orderly handling of path to intermediate results
-b. really random selection of starting inputs
-c. calculation of SSE
-d. spread reducer calc over multiple reducers.
-
+This is a calling program to run an mr job that iterates over a set of
+Eron documents and performs kMeans clustering on the documents
 '''
 
 PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
@@ -48,43 +41,44 @@ def main():
     centroidsJson = fileIn.read()
     fileIn.close()
 
+    # input file
     filePath = os.path.join(PROJECT_ROOT, 'enron_corpus.txt')
 
     #
     # setup the delta that we consider threshhold for "close-enough"
     #
-    # delta = 10
-    delta = 59 
+    delta = 10
 
     #
     # Begin iteration on change in centroids
     #
-    #while delta > 0.01:
-    while delta > 27.25:
+    while delta > 0.01:
         # parse old centroid values
         # centersJson format: [ document1, document2,..., documentN ]
         oldCentroids = json.loads(centroidsJson)
 
         # run one iteration
-        mrJob2 = MRkMeansIter(args=[filePath])
+        mrJob2 = MRkMeansIter( args=[filePath] )
         with mrJob2.make_runner() as runner:
             runner.run()
             
         # compare new centroids to old ones
+        # determine if we are close enough to a final clustering solution 
         fileIn = open(resultsPath)
         centroidsJson = fileIn.read()
         fileIn.close()
         newCentroids = json.loads(centroidsJson)
-        
-        kMeans = len(newCentroids)
-        
+       
         delta = 0.0
-        for i in range(kMeans):
+        for i in range(len(newCentroids)):
             new_center_doc = newCentroids[i]
             old_center_doc = oldCentroids[i]
+            dist = jaccard_dist(new_center_doc, old_center_doc)
             delta += jaccard_dist(new_center_doc, old_center_doc)
-        
+       
+        delta = delta / len(newCentroids) 
         print delta
+        exit()
 
 if __name__ == '__main__':
     main()

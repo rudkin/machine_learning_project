@@ -1,9 +1,9 @@
 '''
 Created on Mar 1, 2012
 
-@author: Nabin
-         Kristine
-         SanJay
+@author: Nabin Acharya
+         Kristine Rudkin
+         SanJay Tibrewal
 '''
 
 import os
@@ -14,6 +14,8 @@ import numpy as np
 from random import sample
 import simplejson as json
 import nltk
+from operator import itemgetter
+
 
 PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
 
@@ -27,18 +29,31 @@ def jaccard_dist(doc1, doc2):
     s2 = set(doc2[1])
     return nltk.metrics.distance.jaccard_distance(s1, s2)
 
+#
+# sort all the similar documents by their respective distances to the target document
+#
+def sort_by_distance( rankings ):
+
+    # now sort by distance value; returns list of (key,value) pairs
+
+    # create final list of similar documents by distance
+    finalSorted = []
+    for tuple in distanceSort:
+        docId = tuple[0]
+        finalSorted.append( document )
+
+    return finalSorted
 
 #
-# given a target and list of [document,distance] pairs, find which pair comes
+# given a target and list of [documents], find which document comes
 # closest to the target distance
 #
-def closest_document(target, collection):
+def closest_document(target_value, cluster_documents):
     smallest_dist = 9999
     closest_idx = 0
     idx = 0
-    for docitem in collection:
-        document = docitem[0]
-        jac_distance = docitem[1]
+    for document in collection:
+        distance = jaccard_dist(target, document)
         if abs(target-jac_distance) < smallest_dist:
            smallest_dist = abs(target-jac_distance)
            closest_idx = idx
@@ -75,7 +90,6 @@ class MRkMeansIter(MRJob):
         if not self.logOut:
             self.logOut = open(logPath,'w')
             self.logOut.write("Inside mr_kMeansIterate.py init \n")
-        self.logOut.write( "end of init, num of entroids = "+repr(len(self.centroids))+"\n")
 
                                                  
     def configure_options(self):
@@ -90,7 +104,6 @@ class MRkMeansIter(MRJob):
         # document = [docId, [wordId1, wordId2, ..., wordIdN]]
         #
         document = json.loads(val)
-        self.logOut.write("In mapper, looking at document: "+repr(document)+"\n")
         
         #
         # now get the shortest distance between all other centroid clusters
@@ -118,7 +131,6 @@ class MRkMeansIter(MRJob):
     
     def reducer(self, key, xs):
         self.logOut.write("In kMeans reducer...\n")
-        self.logOut.write("xs  "+repr(xs)+"\n")
 
         #
         # slightly different input: key is still arbitrary, but xs is list of [centroid_index, distance, document]
@@ -155,8 +167,13 @@ class MRkMeansIter(MRJob):
         #
         clusters = []
         for ckey in cluster_doc_list:
-            docitem = cluster_doc_list[ckey]
-            clusters.append( docitem[0] )
+            cluster = []
+            doclist = cluster_doc_list[ckey]
+            for docitem in doclist:
+                doc = docitem[0]
+                docId = doc[0]
+                cluster.append( docId )
+            clusters.append( cluster )
         clustersOut = json.dumps(clusters)
         fullPath = os.path.join(PROJECT_ROOT, 'canopy_clusters.txt')
         fileOut = open(fullPath,'w')
@@ -168,18 +185,37 @@ class MRkMeansIter(MRJob):
         #
         newCentroids = []
         for cidx in cluster_doc_list:
-            self.logOut.write("looking at sums for cluster : "+repr(cidx)+"\n")
+            doclist = cluster_doc_list[cidx]
+            doc_distances = {}
+            for docitem in doclist:
+                doc = docitem[0]
+                docId = doc[0]
+                dist = docitem[1]
+                doc_distances[docId] = dist 
+            # we have all the docs and their distances in this cluster, sort the list
+            sorted_doc_list = sorted(doc_distances.items(), key=itemgetter(1))
+            mid_idx = len(sorted_doc_list) / 2
+            new_centroid = sorted_doc_list[mid_idx]
+            new_docId = new_centroid[0]
+            new_document = docitem[0][0]
+            for docitem in doclist:
+                document = docitem[0]
+                docId = document[0]
+                if( docId == new_docId ):
+                    new_document = document
+            newCentroids.append( new_document )
+            '''
             sum = cluster_sums[cidx]
             num_docs = len(cluster_doc_list[cidx])
             new_avg_distance = sum / num_docs
             self.logOut.write("sum = "+repr(sum)+", num_docs = "+repr(num_docs)+", avg-distance = "+repr(new_avg_distance)+"\n")
             self.logOut.write( "cluster "+repr(cidx)+": new avg distance = "+repr(new_avg_distance) )
             self.logOut.write( "\tchecking against centroid doc list: "+repr(cluster_doc_list[cidx]) )
-
+            exit()
             # which document in the cluster now represents the new avg distance? 
             doc_idx = closest_document( new_avg_distance, cluster_doc_list[cidx] )
             self.logOut.write("closest document to new avg: "+repr(doc_idx)+"\n")
-            newCentroids.append( cluster_doc_list[cidx][doc_idx][0] )
+            '''
  
         # 
         # write new centroids to file
