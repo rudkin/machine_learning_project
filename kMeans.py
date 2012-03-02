@@ -52,7 +52,9 @@ def main():
     #
     # Begin iteration on change in centroids
     #
-    while delta > 0.01:
+    #while delta > 0.01:
+    loop_count = 0
+    while loop_count < 20:
         # parse old centroid values
         # centersJson format: [ document1, document2,..., documentN ]
         oldCentroids = json.loads(centroidsJson)
@@ -78,7 +80,7 @@ def main():
        
         delta = delta / len(newCentroids) 
         print delta
-        exit()
+        loop_count += 1
 
 if __name__ == '__main__':
     main()
